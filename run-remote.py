@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import asyncio
 import shlex
 import sys
@@ -50,13 +51,28 @@ async def command_loop(reader, writer):
     await run(program, *args, output_stream=writer, errput_stream=writer)
     writer.close()
 
-async def main():
-    server = await asyncio.start_server(command_loop, host='localhost', port=13180) # same port from RemoteForward SSH directive (see ~/.ssh/config)
+async def serve(host, port):
+    server = await asyncio.start_server(command_loop, host=host, port=port)
     async with server:
         await server.serve_forever()
 
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+
+    subparsers = parser.add_subparsers(required=True, dest='subcommand', title='subcommands')
+    run_parser = subparsers.add_parser('serve', help='Start the server')
+    run_parser.add_argument('--host', action='store', default='localhost', help='Hostname or IP address on which to run the server')
+    run_parser.add_argument('-p', '--port', action='store', type=int, default=13180, help='Port on which to run the server') # this port should be used in the RemoteForward SSH directive (see ~/.ssh/config)
+
+    return parser.parse_args()
+
+def main():
+    args = parse_arguments()
+    if args.subcommand == 'serve':
+        try:
+            asyncio.run(serve(args.host, args.port))
+        except KeyboardInterrupt:
+            pass # TODO wait for processes
+
 if __name__ == '__main__':
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        pass # TODO wait for processes
+    main()
