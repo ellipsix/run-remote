@@ -24,6 +24,7 @@ async def run(program, *args, output_stream=None, errput_stream=None):
         stderr_destination = asyncio.subprocess.DEVNULL
     else:
         stderr_destination = asyncio.subprocess.PIPE
+    print(f'[{program}] <starting>')
     process = await asyncio.create_subprocess_exec(
         program,
         *args,
