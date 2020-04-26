@@ -43,8 +43,11 @@ async def run(program, *args, output_stream=None, errput_stream=None):
 
 async def command_loop(reader, writer):
     data = await reader.readline()
+    if not data:
+        return
     program, *args = shlex.split(data.decode('ascii').rstrip())
     await run(program, *args, output_stream=writer, errput_stream=writer)
+    writer.close()
 
 async def main():
     server = await asyncio.start_server(command_loop, host='localhost', port=13180) # same port from RemoteForward SSH directive (see ~/.ssh/config)
