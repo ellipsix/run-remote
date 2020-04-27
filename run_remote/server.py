@@ -13,7 +13,7 @@ async def copy_output(process, source_stream, destination_stream):
                 break
             else:
                 continue
-        destination_stream.write(data)
+        destination_stream.write(b't ' + data)
         await destination_stream.drain()
 
 async def run(program, *args, output_stream=None, errput_stream=None):
@@ -44,12 +44,14 @@ async def run(program, *args, output_stream=None, errput_stream=None):
     logger.info(f'[{program}] <exited with code {process.returncode}>')
 
 async def command_loop(reader, writer):
-    data = await reader.readline()
-    if not data:
-        return
-    program, *args = shlex.split(data.decode('ascii').rstrip())
-    await run(program, *args, output_stream=writer, errput_stream=writer)
-    writer.close()
+    try:
+        data = await reader.readline()
+        if not data or data[:2] != b'e ':
+            return
+        program, *args = shlex.split(data[2:].decode('ascii').rstrip())
+        await run(program, *args, output_stream=writer, errput_stream=writer)
+    finally:
+        writer.close()
 
 async def serve(host, port):
     server = await asyncio.start_server(command_loop, host=host, port=port)
