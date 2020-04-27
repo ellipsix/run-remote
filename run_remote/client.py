@@ -22,7 +22,7 @@ async def run(host, port, program, *args):
     command = shlex.join([program] + list(args))
     logger.info(f'[{program}] <starting>')
     reader, writer = await asyncio.open_connection(host, port)
-    writer.write(f'e {command}\n'.encode('ascii'))
+    writer.write(f'x {command}\n'.encode('ascii'))
     await writer.drain()
     exit_code = await read_commands(reader)
     writer.close()

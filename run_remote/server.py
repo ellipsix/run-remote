@@ -42,7 +42,7 @@ async def run(program, *args, destination_stream=None):
 async def command_loop(reader, writer):
     try:
         data = await reader.readline()
-        if not data or data[:2] != b'e ':
+        if not data or data[:2] != b'x ':
             return
         program, *args = shlex.split(data[2:].decode('ascii').rstrip())
         await run(program, *args, destination_stream=writer)
