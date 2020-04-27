@@ -2,6 +2,7 @@
 
 import argparse
 import asyncio
+import logging
 from .client import run
 from .server import serve
 
@@ -24,6 +25,8 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger('run_remote.client').setLevel(logging.ERROR)
     if args.subcommand == 'serve':
         coroutine = serve(args.host, args.port)
     elif args.subcommand == 'run':

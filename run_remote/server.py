@@ -1,6 +1,9 @@
 import asyncio
+import logging
 import shlex
 import sys
+
+logger = logging.getLogger('run_remote.server')
 
 async def copy_output(process, source_stream, destination_stream):
     while process.returncode is None:
@@ -22,7 +25,7 @@ async def run(program, *args, output_stream=None, errput_stream=None):
         stderr_destination = asyncio.subprocess.DEVNULL
     else:
         stderr_destination = asyncio.subprocess.PIPE
-    print(f'[{program}] <starting>')
+    logger.info(f'[{program}] <starting>')
     process = await asyncio.create_subprocess_exec(
         program,
         *args,
@@ -38,7 +41,7 @@ async def run(program, *args, output_stream=None, errput_stream=None):
         await asyncio.gather(*io_tasks)
     else:
         await process.wait()
-    print(f'[{program}] <exited with code {process.returncode}>')
+    logger.info(f'[{program}] <exited with code {process.returncode}>')
 
 async def command_loop(reader, writer):
     data = await reader.readline()

@@ -1,6 +1,9 @@
 import asyncio
+import logging
 import shlex
 import sys
+
+logger = logging.getLogger('run_remote.client')
 
 async def print_output(source_stream):
     while True:
@@ -14,10 +17,10 @@ async def print_output(source_stream):
 
 async def run(host, port, program, *args):
     command = shlex.join([program] + list(args))
-    print(f'[{program}] <starting>')
+    logger.info(f'[{program}] <starting>')
     reader, writer = await asyncio.open_connection(host, port)
     writer.write((command + '\n').encode('ascii'))
     await writer.drain()
     await print_output(reader)
     writer.close()
-    print(f'[{program}] <exited>')
+    logger.info(f'[{program}] <exited>')
