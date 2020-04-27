@@ -1,9 +1,19 @@
 import asyncio
 import logging
 import shlex
+import shutil
 import sys
 
 logger = logging.getLogger('run_remote.server')
+
+def sanitize_command(program, args):
+    if program in {'kwrite', 'kdiff3'}:
+        program = shutil.which(program)
+        return (program, args) if program else None
+    elif program == 'bash' and len(args) == 1 and args[0] == 'test.sh':
+        return ('/bin/bash', args)
+    else:
+        return None
 
 async def copy_output(process, source_stream, destination_stream):
     while process.returncode is None:
@@ -17,6 +27,14 @@ async def copy_output(process, source_stream, destination_stream):
         await destination_stream.drain()
 
 async def run(program, *args, destination_stream=None):
+    sanitized = sanitize_command(program, args)
+    if not sanitized:
+        destination_stream.write('q 126'.encode('ascii')) # 126 is the return code when running a non-executable program
+        await destination_stream.drain()
+        logger.warning(f'Refusing to run {program} {" ".join(args)}')
+        return
+    program, args = sanitized
+
     if destination_stream is None:
         destination = asyncio.subprocess.DEVNULL
     else:
