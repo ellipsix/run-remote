@@ -37,6 +37,7 @@ async def run(program, *args, destination_stream=None):
     else:
         await process.wait()
     destination_stream.write(f'q {process.returncode}'.encode('ascii'))
+    await destination_stream.drain()
     logger.info(f'[{program}] <exited with code {process.returncode}>')
 
 async def command_loop(reader, writer):
