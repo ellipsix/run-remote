@@ -5,15 +5,18 @@ import sys
 
 logger = logging.getLogger('run_remote.client')
 
-async def print_output(source_stream):
+async def read_commands(source_stream):
     while True:
         data = await source_stream.readline()
-        if not data or data[:2] != b't ':
+        if not data:
             if source_stream.at_eof():
                 break
             else:
                 continue
-        print(data[2:].decode('ascii').rstrip())
+        if data[:2] == b't ':
+            print(data[2:].decode('ascii').rstrip())
+        elif data[:2] == b'q ':
+            return int(data[2:].decode('ascii'))
 
 async def run(host, port, program, *args):
     command = shlex.join([program] + list(args))
@@ -21,6 +24,10 @@ async def run(host, port, program, *args):
     reader, writer = await asyncio.open_connection(host, port)
     writer.write(f'e {command}\n'.encode('ascii'))
     await writer.drain()
-    await print_output(reader)
+    exit_code = await read_commands(reader)
     writer.close()
-    logger.info(f'[{program}] <exited>')
+    if exit_code is not None:
+        logger.info(f'[{program}] <exited with code {exit_code}>')
+    else:
+        logger.error(f'[{program}] <exited with unknown code>')
+    return exit_code

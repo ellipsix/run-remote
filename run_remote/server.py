@@ -16,31 +16,27 @@ async def copy_output(process, source_stream, destination_stream):
         destination_stream.write(b't ' + data)
         await destination_stream.drain()
 
-async def run(program, *args, output_stream=None, errput_stream=None):
-    if output_stream is None:
-        stdout_destination = asyncio.subprocess.DEVNULL
+async def run(program, *args, destination_stream=None):
+    if destination_stream is None:
+        destination = asyncio.subprocess.DEVNULL
     else:
-        stdout_destination = asyncio.subprocess.PIPE
-    if errput_stream is None:
-        stderr_destination = asyncio.subprocess.DEVNULL
-    else:
-        stderr_destination = asyncio.subprocess.PIPE
+        destination = asyncio.subprocess.PIPE
     logger.info(f'[{program}] <starting>')
     process = await asyncio.create_subprocess_exec(
         program,
         *args,
-        stdout=stdout_destination,
-        stderr=stderr_destination
+        stdout=destination,
+        stderr=destination
     )
     io_tasks = []
-    if output_stream is not None:
-        io_tasks.append(asyncio.create_task(copy_output(process, process.stdout, output_stream)))
-    if errput_stream is not None:
-        io_tasks.append(asyncio.create_task(copy_output(process, process.stderr, errput_stream)))
-    if io_tasks:
-        await asyncio.gather(*io_tasks)
+    if destination_stream is not None:
+        await asyncio.gather(
+            copy_output(process, process.stdout, destination_stream),
+            copy_output(process, process.stderr, destination_stream)
+        )
     else:
         await process.wait()
+    destination_stream.write(f'q {process.returncode}'.encode('ascii'))
     logger.info(f'[{program}] <exited with code {process.returncode}>')
 
 async def command_loop(reader, writer):
@@ -49,7 +45,7 @@ async def command_loop(reader, writer):
         if not data or data[:2] != b'e ':
             return
         program, *args = shlex.split(data[2:].decode('ascii').rstrip())
-        await run(program, *args, output_stream=writer, errput_stream=writer)
+        await run(program, *args, destination_stream=writer)
     finally:
         writer.close()
 

@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import logging
+import sys
 from .client import run
 from .server import serve
 
@@ -28,15 +29,21 @@ def main():
     logging.basicConfig(level=logging.INFO)
     logging.getLogger('run_remote.client').setLevel(logging.ERROR)
     if args.subcommand == 'serve':
-        coroutine = serve(args.host, args.port)
+        try:
+            asyncio.run(serve(args.host, args.port))
+        except KeyboardInterrupt:
+            pass # TODO wait for processes
     elif args.subcommand == 'run':
-        coroutine = run(args.host, args.port, args.command, *args.arguments)
+        try:
+            exit_code = asyncio.run(run(args.host, args.port, args.command, *args.arguments))
+        except KeyboardInterrupt:
+            pass # TODO wait for processes
+        if exit_code is None:
+            sys.exit(125)
+        else:
+            sys.exit(exit_code)
     else:
         assert(False) # argparse should have caught this
-    try:
-        asyncio.run(coroutine)
-    except KeyboardInterrupt:
-        pass # TODO wait for processes
 
 if __name__ == '__main__':
     main()
