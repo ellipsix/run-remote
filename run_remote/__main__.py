@@ -36,12 +36,12 @@ def main():
     elif args.subcommand == 'run':
         try:
             exit_code = asyncio.run(run(args.host, args.port, args.command, *args.arguments))
+            if exit_code is None:
+                sys.exit(125)
+            else:
+                sys.exit(exit_code)
         except KeyboardInterrupt:
-            pass # TODO wait for processes
-        if exit_code is None:
-            sys.exit(125)
-        else:
-            sys.exit(exit_code)
+            sys.exit(130)
     else:
         assert(False) # argparse should have caught this
 
