@@ -52,8 +52,7 @@ async def run(program, *args, destination_stream=None):
             copy_output(process, process.stdout, destination_stream),
             copy_output(process, process.stderr, destination_stream)
         )
-    else:
-        await process.wait()
+    await process.wait()
     destination_stream.write(f'q {process.returncode}'.encode('ascii'))
     await destination_stream.drain()
     logger.info(f'[{program}] <exited with code {process.returncode}>')
