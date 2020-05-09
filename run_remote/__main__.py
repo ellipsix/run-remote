@@ -3,12 +3,26 @@
 import argparse
 import asyncio
 import logging
+import logging.config
+import logging.handlers
 import sys
 from .client import run
 from .server import serve
 
+def log_destination(s):
+    if s in ('syslog', 'stderr'):
+        return s
+    elif s.startswith('file:') and len(s) > 5:
+        return s
+    else:
+        raise argparse.ArgumentTypeError(f'{s} is not a valid logging destination')
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
+
+    parser.add_argument('-v', '--verbose', action='count', help='Enable verbose output; repeat for increased verbosity')
+    parser.add_argument('--log-dest', metavar='DEST', type=log_destination, help='Set the destination for verbose output; valid values are stderr or file:FILENAME')
+    parser.add_argument('--log-config', metavar='FILE', action='store', help='Configure the logging system from a file')
 
     subparsers = parser.add_subparsers(required=True, dest='subcommand', title='subcommands')
 
@@ -24,10 +38,27 @@ def parse_arguments():
 
     return parser.parse_args()
 
+def configure_logging(args):
+    if args.log_config:
+        logging.fileConfig(args.log_config)
+        return
+
+    basic_config_parameters = {}
+    if args.verbose == 1:
+        basic_config_parameters['level'] = logging.WARNING
+    elif args.verbose == 2:
+        basic_config_parameters['level'] = logging.INFO
+    elif args.verbose == 3:
+        basic_config_parameters['level'] = logging.DEBUG
+    if args.log_dest == 'stderr':
+        basic_config_parameters['handlers'] = [logging.StreamHandler()]
+    elif args.log_dest and args.log_dest.startswith('file:'):
+        basic_config_parameters['handlers'] = [logging.FileHandler(args.log_dest[5:])]
+    logging.basicConfig(**basic_config_parameters)
+
 def main():
     args = parse_arguments()
-    logging.basicConfig(level=logging.INFO)
-    logging.getLogger('run_remote.client').setLevel(logging.ERROR)
+    configure_logging(args)
     if args.subcommand == 'serve':
         try:
             asyncio.run(serve(args.host, args.port))
