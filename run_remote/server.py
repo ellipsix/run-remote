@@ -1,19 +1,10 @@
 import asyncio
 import logging
 import shlex
-import shutil
 import sys
+from run_remote.command import sanitize_command
 
 logger = logging.getLogger('run_remote.server')
-
-def sanitize_command(program, args):
-    if program in {'kwrite', 'kdiff3'}:
-        program = shutil.which(program)
-        return (program, args) if program else None
-    elif program == 'bash' and len(args) == 1 and args[0] == 'test.sh':
-        return ('/bin/bash', args)
-    else:
-        return None
 
 async def copy_output(process, source_stream, destination_stream):
     while process.returncode is None:
