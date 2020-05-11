@@ -65,14 +65,17 @@ def configure_logging(configuration, verbosity=None, log_dest=None):
             basic_config_parameters['force'] = True
         logging.basicConfig(**basic_config_parameters)
 
+def construct_command_sanitizer(configuration):
+    from run_remote.command import CommandSanitizer
+    return CommandSanitizer()
+
 def main():
     args = parse_arguments()
     configuration = load_configuration(args.config)
     configure_logging(configuration, args.verbose, args.log_dest)
     if args.subcommand == 'serve':
-        from run_remote.command import CommandSanitizer
         from run_remote.server import Server
-        s = Server(args.host, args.port, CommandSanitizer())
+        s = Server(args.host, args.port, construct_command_sanitizer(configuration))
         try:
             asyncio.run(s.serve())
         except KeyboardInterrupt:
