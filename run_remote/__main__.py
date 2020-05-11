@@ -70,8 +70,9 @@ def main():
     configuration = load_configuration(args.config)
     configure_logging(configuration, args.verbose, args.log_dest)
     if args.subcommand == 'serve':
+        from run_remote.command import CommandSanitizer
         from run_remote.server import Server
-        s = Server(args.host, args.port)
+        s = Server(args.host, args.port, CommandSanitizer())
         try:
             asyncio.run(s.serve())
         except KeyboardInterrupt:
