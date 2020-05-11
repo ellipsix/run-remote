@@ -1,0 +1,135 @@
+# This is a sample configuration file for the run-remote script. It's designed
+# so that it should work out-of-the-box as a reasonable configuration for both
+# the client and the server, but it also gives tips about how the configuration
+# can be customized.
+
+# Logging configuration is stored under the [logging] key. The content of this
+# table is passed directly to logging.config.dictConfig(). See the docs for
+# Python's standard logging.config module for details on the expected format.
+# What appears here is only a quick overview of some of the allowed keys and
+# values.
+[logging]
+# The logging.version key is required. It identifies the version of
+# the logging configuration schema. As of Python 3.8, the only allowed value
+# is 1.
+version = 1
+
+# The logging.handlers table defines handlers which take logged messages and do
+# things with them, which may include printing them to standard output or
+# standard error, writing them to a file, or so on. This table can contain any
+# number of nested tables; each one defines a handler. The handlers won't do
+# anything by themselves, but they can be connected to the root logger by
+# entries in the logging.root table, or to other loggers by entries in
+# the logging.loggers table.
+[logging.handlers]
+# This table defines a handler called "console". As the name suggests, it prints
+# each message to the standard error stream. The only required key is class,
+# which names the Python class that will be used to construct the handler.
+console.class = "logging.StreamHandler"
+# The level key sets the minimum level of messages that this handler will handle.
+# Messages at lower levels are ignored. Valid levels are (from lowest to highest)
+# DEBUG, INFO, WARNING, ERROR, and CRITICAL. If this key is omitted, the logger
+# will handle all messages that come to it, regardless of level.
+console.level = "INFO"
+# The formatter key has a value that should match one of the keys in
+# logging.formatters (see below). It means the handler will use the specified
+# formatter to render logged messages to strings.
+console.formatter = "default"
+# This table defines a handler called "file", which will write each logged
+# message to a file. It uses Python's standard RotatingFileHandler to
+# automatically move the file and start a new one once it gets too large, so
+# that the total amount of log data kept is not too large.
+file.class = "logging.handlers.RotatingFileHandler"
+# The filename key gives the file of the file that log messages are written to.
+# When the file is rotated, it will be renamed to the same name with .1 after
+# it, and any existing file will that name will have the .1 changed to .2, and
+# so on until the maximum number of backups to keep is reached.
+file.filename = "run-remote.log"
+# The maxBytes key gives the maximum size that any one log file will be allowed
+# to reach before being rotated.
+file.maxBytes = 1048576
+# The backupCount key gives the number of times a log file gets rotated before
+# it gets deleted.
+file.backupCount = 5
+# This table defines a handler called "rich", which uses the Python library rich
+# to render messages. The handler will not work unless you have the rich library
+# installed, so the lines are commented.
+#rich.class = "rich.logging.RichHandler"
+#rich.level = "INFO"
+#rich.formatter = "default"
+
+# The logging.formatters table defines formatters that can be used to render
+# logged messages into strings. This table can contain any number of nested
+# tables; each one defines a formatter. The formatters are referenced from
+# the formatter keys of tables under logging.handlers.
+[logging.formatters]
+# This table defines a formatter named "default". It renders a log message along
+# with the time at which it was logged, the level at which it was logged, and
+# the name of the logger that it was logged on.
+default.format = "%(asctime)s %(levelname)-8s %(name)-20s %(message)s"
+# The "%(asctime)s" string in the format will be substituted with the time at
+# which the message was logged, using the format defined by the datefmt key.
+# The date format uses strftime() codes.
+default.datefmt = "%Y-%m-%d %H:%M:%S"
+# If using the rich library, it will print the time and level name itself, so
+# this may be a more useful format.
+#rich.format = "%(name)-20s %(message)s"
+
+# The logging.root table defines the configuration for the root logger.
+[logging.root]
+# This directs the system to add the handler named "console" to the root
+# logger, so that messages logged to any logger anywhere in the program will
+# be logged to standard error (that is, if they meet other required criteria
+# i.e. the minimum level defined just below).
+handlers = ["console"]
+# The level key specifies the minimum level of messages that the root logger
+# will handle. Only messages at this level or higher will be passed on to
+# the root logger's handlers. If not explicitly set, this defaults to WARNING.
+level = "ERROR"
+
+# Tables inside logging.loggers define the configuration for named loggers,
+# which are under the root logger and may pass their messages up to it. The two
+# main loggers used by run-remote are run_remote.client and run_remote.server,
+# which are used for client-specific messages and server-specific messages
+# respectively. Note that other parts of the code may use different loggers
+# which are not descended from these two, so there's no guarantee that
+# the configuration in these two sections will capture all logging messages.
+#
+# For realistic usage, you may want to have two different configuration files
+# for the client and server, and in each one, configure only the root logger,
+# not the client-specific or server-specific loggers.
+
+[logging.loggers."run_remote.client"]
+# This directs the system to add the handler named "console" to the client
+# logger.
+handlers = ["console"]
+# This sets the level of the client logger to WARNING. This way, messages that
+# describe normal functioning of the program, which are logged at INFO or DEBUG
+# levels, won't appear and won't interfere with the standard output or standard
+# error of the remote command.
+level = "WARNING"
+# This specifies that messages logged with the run_remote.client logger should
+# not be passed up the hierarchy to the run_remote logger and then to the root
+# logger. This prevents them from being printed to the console twice. If
+# the root logger and the run_remote.client logger don't have the same handler
+# attached, it may be better to remove this setting (it defaults to true).
+propagate = false
+
+[logging.loggers."run_remote.server"]
+# This directs the system to add both handlers, "console" and "file", to
+# the server logger. That way, diagnostic output from the server will appear
+# both in the console where it is run and in the log file. If you run
+# the server in a context where it doesn't have a console to print to, you
+# may want to disable the console handler.
+handlers = ["console", "file"]
+# This sets the level of the server logger to WARNING. This way, messages that
+# describe normal functioning of the program, which are logged at INFO or DEBUG
+# levels, won't appear and won't interfere with the standard output or standard
+# error of the remote command.
+level = "INFO"
+# This specifies that messages logged with the run_remote.server logger should
+# not be passed up the hierarchy to the run_remote logger and then to the root
+# logger. This prevents them from being printed to the console twice. If
+# the root logger and the run_remote.server logger don't have the same handler
+# attached, it may be better to remove this setting (it defaults to true).
+propagate = false
