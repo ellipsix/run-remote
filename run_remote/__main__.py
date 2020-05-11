@@ -70,19 +70,17 @@ def main():
     configuration = load_configuration(args.config)
     configure_logging(configuration, args.verbose, args.log_dest)
     if args.subcommand == 'serve':
-        # This import has to be here so that the logging system gets configured
-        # before the module is imported and its corresponding logger is loaded
-        from run_remote.server import serve
+        from run_remote.server import Server
+        s = Server(args.host, args.port)
         try:
-            asyncio.run(serve(args.host, args.port))
+            asyncio.run(s.serve())
         except KeyboardInterrupt:
             pass # TODO wait for processes
     elif args.subcommand == 'run':
-        # This import has to be here so that the logging system gets configured
-        # before the module is imported and its corresponding logger is loaded
-        from run_remote.client import run
+        from run_remote.client import Client
+        c = Client(args.host, args.port)
         try:
-            exit_code = asyncio.run(run(args.host, args.port, args.command, *args.arguments))
+            exit_code = asyncio.run(c.run(args.command, *args.arguments))
             if exit_code is None:
                 sys.exit(125)
             else:
