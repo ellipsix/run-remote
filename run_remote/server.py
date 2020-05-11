@@ -2,14 +2,13 @@ import asyncio
 import logging
 import shlex
 import sys
-from run_remote.command import CommandSanitizer
 
 class Server:
-    def __init__(self, host, port):
+    def __init__(self, host, port, command_sanitizer):
         self.logger = logging.getLogger('run_remote.server')
         self.host = host
         self.port = port
-        self.sanitizer = CommandSanitizer()
+        self.sanitizer = command_sanitizer
 
     async def copy_output(self, process, source_stream, destination_stream):
         while process.returncode is None:
