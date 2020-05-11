@@ -59,6 +59,10 @@ def configure_logging(configuration, verbosity=None, log_dest=None):
     elif log_dest and log_dest.startswith('file:'):
         basic_config_parameters['handlers'] = [logging.FileHandler(log_dest[5:])]
     if basic_config_parameters:
+        root_logger = logging.getLogger()
+        if root_logger.hasHandlers():
+            root_logger.warning('Replacing configured handlers for root logger')
+            basic_config_parameters['force'] = True
         logging.basicConfig(**basic_config_parameters)
 
 def main():
