@@ -2,7 +2,6 @@ import asyncio
 import logging
 import shlex
 import sys
-from run_remote.command import CommandSanitizer
 
 class Server:
     def __init__(self, host, port, command_sanitizer):
