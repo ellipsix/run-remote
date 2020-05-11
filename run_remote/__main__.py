@@ -66,8 +66,35 @@ def configure_logging(configuration, verbosity=None, log_dest=None):
         logging.basicConfig(**basic_config_parameters)
 
 def construct_command_sanitizer(configuration):
-    from run_remote.command import CommandSanitizer
-    return CommandSanitizer()
+    import importlib
+    import run_remote.command
+    logger = logging.getLogger('run_remote.command')
+    sanitizer_config = configuration.get('command', {}).get('sanitizer', {})
+    if 'class' not in sanitizer_config:
+        logger.info('No sanitizer class found in configuration')
+        return run_remote.command.default_sanitizer
+    module_name, _, name = sanitizer_config['class'].rpartition('.')
+    if module_name:
+        try:
+            module = importlib.import_module(module_name)
+        except ImportError:
+            logger.exception(f'Import of sanitizer module {module_name} failed')
+            return None
+        else:
+            logger.debug(f'Using {module_name} as sanitizer module')
+    else:
+        module = run_remote.command
+        logger.debug('Using run_remote.command as sanitizer module')
+    try:
+        sanitizer_class = getattr(module, name)
+    except AttributeError:
+        logger.exception(f'Sanitizer {name} not found in module {module_name}')
+        return None
+    try:
+        return sanitizer_class(**{k: v for k, v in sanitizer_config.items() if k != 'class'})
+    except:
+        logger.exception(f'Unable to initialize sanitizer from class {sanitizer_class!r}')
+        return None
 
 def main():
     args = parse_arguments()
@@ -75,7 +102,10 @@ def main():
     configure_logging(configuration, args.verbose, args.log_dest)
     if args.subcommand == 'serve':
         from run_remote.server import Server
-        s = Server(args.host, args.port, construct_command_sanitizer(configuration))
+        sanitizer = construct_command_sanitizer(configuration)
+        if sanitizer is None:
+            sys.exit(1)
+        s = Server(args.host, args.port, sanitizer)
         try:
             asyncio.run(s.serve())
         except KeyboardInterrupt:

@@ -3,6 +3,33 @@
 # the client and the server, but it also gives tips about how the configuration
 # can be customized.
 
+# The [command] key contains a table with information relating to how run-remote
+# interprets and runs commands. [command.sanitizer] specifies how the program
+# chooses which commands the server is allowed to run. In order to specify custom
+# behavior here, the class key is required; if it's not present, the program will
+# use a default sanitizer that allows running any program that is present in PATH
+# with any arguments. (That's not terribly secure, so changing from the default
+# is probably a good idea.)
+[command.sanitizer]
+# The class key names a Python class which will be instantiated to produce
+# a sanitizer. If the value contains any periods, it will be interpreted as
+# a fully-qualified class name; otherwise, it will be interpreted as the name of
+# a class in the run_remote.command module. All other keys and values under
+# [command.sanitizer], except for class itself, get passed to the constructor of
+# the named class as keyword arguments, so the required arguments depend on
+# the definition of the chosen class.
+#
+# PathProgramWhitelist is a class whose constructor accepts a list of program
+# names, given under the allowed_programs key. Any command the server receives
+# whose first word is not in the list gets rejected. If the first word of
+# the command is in the list, then the PathProgramWhitelist checks whether
+# a program with that name is present in PATH, and if so, it will run that
+# program; otherwise it will reject the command.
+class = "PathProgramWhitelist"
+# This is the list of programs that can be run by the server. Adjust it to suit
+# your needs.
+allowed_programs = ["kwrite", "kdiff3"]
+
 # Logging configuration is stored under the [logging] key. The content of this
 # table is passed directly to logging.config.dictConfig(). See the docs for
 # Python's standard logging.config module for details on the expected format.

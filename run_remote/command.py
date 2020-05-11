@@ -1,14 +1,16 @@
 import shutil
 
-class CommandSanitizer:
-    def __init__(self):
-        pass
+def default_sanitizer(program, args):
+    program = shutil.which(program) or program
+    return (program, args) if program else None
+
+class PathProgramWhitelist:
+    def __init__(self, allowed_programs):
+        self.allowed_programs = allowed_programs
 
     def __call__(self, program, args):
-        if program in {'kwrite', 'kdiff3'}:
+        if program in self.allowed_programs:
             program = shutil.which(program)
             return (program, args) if program else None
-        elif program == 'bash' and len(args) == 1 and args[0] == 'test.sh':
-            return ('/bin/bash', args)
         else:
             return None
