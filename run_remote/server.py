@@ -2,13 +2,14 @@ import asyncio
 import logging
 import shlex
 import sys
-from run_remote.command import sanitize_command
+from run_remote.command import CommandSanitizer
 
 class Server:
     def __init__(self, host, port):
         self.logger = logging.getLogger('run_remote.server')
         self.host = host
         self.port = port
+        self.sanitizer = CommandSanitizer()
 
     async def copy_output(self, process, source_stream, destination_stream):
         while process.returncode is None:
@@ -24,7 +25,7 @@ class Server:
     async def run(self, program, *args, destination_stream=None):
         command = shlex.join([program] + list(args))
         self.logger.debug(f'Received request to run command: {command}')
-        sanitized = sanitize_command(program, args)
+        sanitized = self.sanitizer(program, args)
         if not sanitized:
             destination_stream.write('q 126'.encode('ascii')) # 126 is the return code when running a non-executable program
             await destination_stream.drain()
