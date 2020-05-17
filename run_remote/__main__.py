@@ -7,8 +7,11 @@ import logging.config
 import logging.handlers
 import sys
 import tomlkit
+from typing import Any, Dict, List, Mapping, Union
 
-def log_destination(s):
+ConfigurationType = Mapping[str, Any]
+
+def log_destination(s: str) -> str:
     if s in ('syslog', 'stderr'):
         return s
     elif s.startswith('file:') and len(s) > 5:
@@ -37,17 +40,17 @@ def parse_arguments():
 
     return parser.parse_args()
 
-def load_configuration(filename):
+def load_configuration(filename: str) -> Dict[str, Any]:
     if not filename:
         return {}
     with open(filename) as f:
         return tomlkit.parse(f.read())
 
-def configure_logging(configuration, verbosity=None, log_dest=None):
+def configure_logging(configuration: ConfigurationType, verbosity: bool = None, log_dest: str = None) -> None:
     if 'logging' in configuration:
         logging.config.dictConfig(configuration['logging'])
 
-    basic_config_parameters = {}
+    basic_config_parameters: Dict[str, Any] = {}
     if verbosity == 1:
         basic_config_parameters['level'] = logging.WARNING
     elif verbosity == 2:
@@ -65,7 +68,7 @@ def configure_logging(configuration, verbosity=None, log_dest=None):
             basic_config_parameters['force'] = True
         logging.basicConfig(**basic_config_parameters)
 
-def construct_command_sanitizer(configuration):
+def construct_command_sanitizer(configuration: ConfigurationType):
     import importlib
     import run_remote.command
     logger = logging.getLogger('run_remote.command')
@@ -96,7 +99,7 @@ def construct_command_sanitizer(configuration):
         logger.exception(f'Unable to initialize sanitizer from class {sanitizer_class!r}')
         return None
 
-def main():
+def main() -> None:
     args = parse_arguments()
     configuration = load_configuration(args.config)
     configure_logging(configuration, args.verbose, args.log_dest)
