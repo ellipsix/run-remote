@@ -5,9 +5,7 @@ Command = str
 Arguments = Iterable[str]
 
 
-def default_sanitizer(
-    program: Command, args: Arguments
-) -> Optional[Tuple[Command, Arguments]]:
+def default_sanitizer(program: Command, args: Arguments) -> Optional[Tuple[Command, Arguments]]:
     program = shutil.which(program) or program
     return (program, args) if program else None
 

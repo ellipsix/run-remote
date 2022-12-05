@@ -43,9 +43,7 @@ def parse_arguments():
         help="Set the destination for verbose output; valid values are stderr or file:FILENAME",
     )
 
-    subparsers = parser.add_subparsers(
-        required=True, dest="subcommand", title="subcommands"
-    )
+    subparsers = parser.add_subparsers(required=True, dest="subcommand", title="subcommands")
 
     serve_parser = subparsers.add_parser("serve", help="Start the server")
     serve_parser.add_argument(
@@ -79,9 +77,7 @@ def parse_arguments():
         help="Port to connect to",
     )
     run_parser.add_argument("command", help="Command to run")
-    run_parser.add_argument(
-        "arguments", nargs=argparse.REMAINDER, help="Arguments for the command"
-    )
+    run_parser.add_argument("arguments", nargs=argparse.REMAINDER, help="Arguments for the command")
 
     return parser.parse_args()
 
@@ -93,9 +89,7 @@ def load_configuration(filename: str) -> Dict[str, Any]:
         return tomlkit.parse(f.read())
 
 
-def configure_logging(
-    configuration: ConfigurationType, verbosity: bool = None, log_dest: str = None
-) -> None:
+def configure_logging(configuration: ConfigurationType, verbosity: bool = None, log_dest: str = None) -> None:
     if "logging" in configuration:
         logging.config.dictConfig(configuration["logging"])
 
@@ -145,13 +139,9 @@ def construct_command_sanitizer(configuration: ConfigurationType):
         logger.exception(f"Sanitizer {name} not found in module {module_name}")
         return None
     try:
-        return sanitizer_class(
-            **{k: v for k, v in sanitizer_config.items() if k != "class"}
-        )
+        return sanitizer_class(**{k: v for k, v in sanitizer_config.items() if k != "class"})
     except:
-        logger.exception(
-            f"Unable to initialize sanitizer from class {sanitizer_class!r}"
-        )
+        logger.exception(f"Unable to initialize sanitizer from class {sanitizer_class!r}")
         return None
 
 
