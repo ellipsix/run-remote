@@ -2,13 +2,13 @@ import asyncio
 import logging
 import shlex
 import sys
-from run_remote.command import Arguments, Command, CommandSanitizer
+from ellipsix.run_remote.command import Arguments, Command, CommandSanitizer
 from typing import List
 
 
 class Server:
     def __init__(self, host: str, port: int, command_sanitizer: CommandSanitizer) -> None:
-        self.logger = logging.getLogger("run_remote.server")
+        self.logger = logging.getLogger("ellipsix.run_remote.server")
         self.host = host
         self.port = port
         self.sanitizer = command_sanitizer

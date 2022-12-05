@@ -114,13 +114,13 @@ def configure_logging(configuration: ConfigurationType, verbosity: bool = None, 
 
 def construct_command_sanitizer(configuration: ConfigurationType):
     import importlib
-    import run_remote.command
+    import ellipsix.run_remote.command
 
-    logger = logging.getLogger("run_remote.command")
+    logger = logging.getLogger("ellipsix.run_remote.command")
     sanitizer_config = configuration.get("command", {}).get("sanitizer", {})
     if "class" not in sanitizer_config:
         logger.info("No sanitizer class found in configuration")
-        return run_remote.command.default_sanitizer
+        return ellipsix.run_remote.command.default_sanitizer
     module_name, _, name = sanitizer_config["class"].rpartition(".")
     if module_name:
         try:
@@ -131,8 +131,8 @@ def construct_command_sanitizer(configuration: ConfigurationType):
         else:
             logger.debug(f"Using {module_name} as sanitizer module")
     else:
-        module = run_remote.command
-        logger.debug("Using run_remote.command as sanitizer module")
+        module = ellipsix.run_remote.command
+        logger.debug("Using ellipsix.run_remote.command as sanitizer module")
     try:
         sanitizer_class = getattr(module, name)
     except AttributeError:
@@ -150,7 +150,7 @@ def main() -> None:
     configuration = load_configuration(args.config)
     configure_logging(configuration, args.verbose, args.log_dest)
     if args.subcommand == "serve":
-        from run_remote.server import Server
+        from ellipsix.run_remote.server import Server
 
         sanitizer = construct_command_sanitizer(configuration)
         if sanitizer is None:
@@ -161,7 +161,7 @@ def main() -> None:
         except KeyboardInterrupt:
             pass  # TODO wait for processes
     elif args.subcommand == "run":
-        from run_remote.client import Client
+        from ellipsix.run_remote.client import Client
 
         c = Client(args.host, args.port)
         try:
