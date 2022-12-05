@@ -4,3 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 write_to = "src/run_remote/_version.py"
+
+[tool.black]
+line-length = 124
+target-version = ['py36']  # Lowest version that the project is compatible with

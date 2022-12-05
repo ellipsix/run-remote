@@ -7,9 +7,7 @@ from typing import List
 
 
 class Server:
-    def __init__(
-        self, host: str, port: int, command_sanitizer: CommandSanitizer
-    ) -> None:
+    def __init__(self, host: str, port: int, command_sanitizer: CommandSanitizer) -> None:
         self.logger = logging.getLogger("run_remote.server")
         self.host = host
         self.port = port
@@ -45,9 +43,7 @@ class Server:
         else:
             destination = asyncio.subprocess.PIPE
         self.logger.debug(f"About to run command {command}")
-        process = await asyncio.create_subprocess_exec(
-            program, *args, stdout=destination, stderr=destination
-        )
+        process = await asyncio.create_subprocess_exec(program, *args, stdout=destination, stderr=destination)
         self.logger.info(f"PID {process.pid} running command: {command}")
         if destination_stream is not None:
             await asyncio.gather(
@@ -65,9 +61,7 @@ class Server:
             data = await reader.readline()
             if not data or data[:2] != b"x ":
                 addr = writer.get_extra_info("peername")
-                self.logger.warning(
-                    f'Received unknown command from {addr!r}: {data.decode("ascii").rstrip()}'
-                )
+                self.logger.warning(f'Received unknown command from {addr!r}: {data.decode("ascii").rstrip()}')
                 return
             program, *args = shlex.split(data[2:].decode("ascii").rstrip())
             await self.run(program, *args, destination_stream=writer)
@@ -75,16 +69,9 @@ class Server:
             writer.close()
 
     async def serve(self) -> None:
-        server = await asyncio.start_server(
-            self.command_loop, host=self.host, port=self.port
-        )
+        server = await asyncio.start_server(self.command_loop, host=self.host, port=self.port)
         if not server.sockets:
-            raise RuntimeError(
-                f"Unable to initialize server on {self.host}:{self.port}"
-            )
-        self.logger.debug(
-            "Serving on "
-            + ",".join("{0}:{1}".format(*s.getsockname()) for s in server.sockets)
-        )
+            raise RuntimeError(f"Unable to initialize server on {self.host}:{self.port}")
+        self.logger.debug("Serving on " + ",".join("{0}:{1}".format(*s.getsockname()) for s in server.sockets))
         async with server:
             await server.serve_forever()
